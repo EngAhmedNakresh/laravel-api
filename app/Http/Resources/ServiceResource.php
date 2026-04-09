@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class ServiceResource extends JsonResource
 {
@@ -19,7 +20,7 @@ class ServiceResource extends JsonResource
             'description' => $this->getLocalized('description', $lang),
             'description_en' => $this->description_en,
             'description_ar' => $this->description_ar,
-            'image' => $this->image,
+            'image' => $this->publicImageUrl($this->image),
             'icon' => $this->icon,
             'feature_one' => $this->getLocalized('feature_one', $lang),
             'feature_one_en' => $this->feature_one_en,
@@ -33,4 +34,18 @@ class ServiceResource extends JsonResource
             'created_at' => $this->created_at,
         ];
     }
+
+    private function publicImageUrl(?string $path): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+
+        if (filter_var($path, FILTER_VALIDATE_URL) || str_starts_with($path, '/')) {
+            return $path;
+        }
+
+        return Storage::disk('public')->url($path);
+    }
 }
+

@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class DepartmentResource extends JsonResource
 {
@@ -17,9 +18,9 @@ class DepartmentResource extends JsonResource
             'name' => $this->getLocalized('name', $lang),
             'short_description' => $this->getLocalized('short_description', $lang),
             'description' => $this->getLocalized('description', $lang),
-            'card_image' => $this->card_image,
-            'detail_image' => $this->detail_image,
-            'detail_image_secondary' => $this->detail_image_secondary,
+            'card_image' => $this->publicImageUrl($this->card_image),
+            'detail_image' => $this->publicImageUrl($this->detail_image),
+            'detail_image_secondary' => $this->publicImageUrl($this->detail_image_secondary),
             'icon' => $this->icon,
             'feature_one' => $this->getLocalized('feature_one', $lang),
             'feature_two' => $this->getLocalized('feature_two', $lang),
@@ -51,4 +52,18 @@ class DepartmentResource extends JsonResource
             'created_at' => $this->created_at,
         ];
     }
+
+    private function publicImageUrl(?string $path): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+
+        if (filter_var($path, FILTER_VALIDATE_URL) || str_starts_with($path, '/')) {
+            return $path;
+        }
+
+        return Storage::disk('public')->url($path);
+    }
 }
+

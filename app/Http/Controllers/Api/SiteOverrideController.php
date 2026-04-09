@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Models\SiteOverride;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 
 class SiteOverrideController extends ApiController
@@ -14,7 +15,7 @@ class SiteOverrideController extends ApiController
         $record = SiteOverride::ensureSeeded();
 
         return $this->successResponse([
-            'overrides' => $record->overrides,
+            'overrides' => $this->formatOverridesForResponse($record->overrides ?? []),
         ]);
     }
 
@@ -57,7 +58,7 @@ class SiteOverrideController extends ApiController
         ]);
 
         return $this->successResponse([
-            'overrides' => $record->fresh()->overrides,
+            'overrides' => $this->formatOverridesForResponse($record->fresh()->overrides ?? []),
         ], 'Site settings updated successfully.');
     }
 
@@ -83,6 +84,30 @@ class SiteOverrideController extends ApiController
 
         return Storage::disk('public')->exists($path);
     }
+
+    private function formatOverridesForResponse(array $overrides): array
+    {
+        foreach (array_keys($this->imageDirectories()) as $key) {
+            $value = Arr::get($overrides, $key);
+            Arr::set($overrides, $key, $this->publicImageUrl($value));
+        }
+
+        return $overrides;
+    }
+
+    private function publicImageUrl(mixed $path): mixed
+    {
+        if (! is_string($path) || $path === '') {
+            return $path;
+        }
+
+        if (filter_var($path, FILTER_VALIDATE_URL) || str_starts_with($path, '/')) {
+            return $path;
+        }
+
+        return Storage::disk('public')->url($path);
+    }
 }
+
 
 
