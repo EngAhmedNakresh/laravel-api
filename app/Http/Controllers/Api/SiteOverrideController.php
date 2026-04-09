@@ -22,13 +22,22 @@ class SiteOverrideController extends ApiController
     {
         $data = $request->validate([
             'overrides' => ['nullable', 'array'],
+            'overrides.heroImageUrl' => ['nullable', 'file', 'image', 'max:2048'],
+            'overrides.aboutImageUrl' => ['nullable', 'file', 'image', 'max:2048'],
+            'overrides.servicesSpotlightImageUrl' => ['nullable', 'file', 'image', 'max:2048'],
+            'overrides.callToActionImageUrl' => ['nullable', 'file', 'image', 'max:2048'],
+            'heroImageUrl' => ['nullable', 'file', 'image', 'max:2048'],
+            'aboutImageUrl' => ['nullable', 'file', 'image', 'max:2048'],
+            'servicesSpotlightImageUrl' => ['nullable', 'file', 'image', 'max:2048'],
+            'callToActionImageUrl' => ['nullable', 'file', 'image', 'max:2048'],
         ]);
 
         $record = SiteOverride::ensureSeeded();
         $overrides = is_array($data['overrides'] ?? null) ? $data['overrides'] : [];
+        $nestedFiles = $request->file('overrides', []);
 
         foreach ($this->imageDirectories() as $key => $directory) {
-            $file = $request->file("overrides.$key") ?? $request->file($key);
+            $file = $nestedFiles[$key] ?? $request->file("overrides.$key") ?? $request->file($key);
 
             if (! $file) {
                 continue;
@@ -75,3 +84,5 @@ class SiteOverrideController extends ApiController
         return Storage::disk('public')->exists($path);
     }
 }
+
+

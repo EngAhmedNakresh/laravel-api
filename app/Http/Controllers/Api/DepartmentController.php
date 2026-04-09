@@ -84,6 +84,12 @@ class DepartmentController extends ApiController
 
     private function validated(Request $request, bool $creating, ?int $departmentId = null): array
     {
+        $this->normalizeJsonArrayInputs($request, [
+            'stats',
+            'services_list',
+            'expertise_list',
+        ]);
+
         $slugRule = ['required', 'string', 'max:255'];
         $slugRule[] = $creating ? 'unique:departments,slug' : "unique:departments,slug,{$departmentId}";
         $cardImageRules = $request->hasFile('card_image')
@@ -148,5 +154,28 @@ class DepartmentController extends ApiController
         }
 
         return Storage::disk('public')->exists($path);
+    }
+
+    private function normalizeJsonArrayInputs(Request $request, array $keys): void
+    {
+        $normalized = [];
+
+        foreach ($keys as $key) {
+            $value = $request->input($key);
+
+            if (! is_string($value) || trim($value) === '') {
+                continue;
+            }
+
+            $decoded = json_decode($value, true);
+
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $normalized[$key] = $decoded;
+            }
+        }
+
+        if ($normalized !== []) {
+            $request->merge($normalized);
+        }
     }
 }
