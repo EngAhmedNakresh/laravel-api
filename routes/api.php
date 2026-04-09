@@ -82,9 +82,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('conversations/{conversation}', [ConversationController::class, 'destroy']);
 
     Route::middleware('admin')->group(function () {
-        Route::put('admin/site-overrides', [SiteOverrideController::class, 'update']);
+        Route::match(['PUT', 'POST'], 'admin/site-overrides', [SiteOverrideController::class, 'update']);
         Route::post('departments', [DepartmentController::class, 'store']);
-        Route::put('departments/{department}', [DepartmentController::class, 'update']);
+        Route::match(['PUT', 'POST'], 'departments/{department}', [DepartmentController::class, 'update']);
         Route::delete('departments/{department}', [DepartmentController::class, 'destroy']);
 
         Route::post('doctors', [DoctorController::class, 'store']);
@@ -92,7 +92,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('doctors/{doctor}', [DoctorController::class, 'destroy']);
 
         Route::post('services', [ServiceController::class, 'store']);
-        Route::put('services/{service}', [ServiceController::class, 'update']);
+        Route::match(['PUT', 'POST'], 'services/{service}', [ServiceController::class, 'update']);
         Route::delete('services/{service}', [ServiceController::class, 'destroy']);
 
         Route::get('patients', [PatientController::class, 'index']);
@@ -110,3 +110,4 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 });
+

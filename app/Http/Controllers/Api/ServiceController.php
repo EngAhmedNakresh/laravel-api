@@ -8,6 +8,7 @@ use App\Http\Resources\ServiceResource;
 use App\Models\Service;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ServiceController extends ApiController
 {
@@ -35,7 +36,13 @@ class ServiceController extends ApiController
 
     public function store(StoreServiceRequest $request): JsonResponse
     {
-        $service = Service::create($request->validated());
+        $data = $request->validated();
+
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('services', 'public');
+        }
+
+        $service = Service::create($data);
 
         return $this->successResponse(new ServiceResource($service), 'Service created successfully.', 201);
     }
@@ -47,15 +54,38 @@ class ServiceController extends ApiController
 
     public function update(UpdateServiceRequest $request, Service $service): JsonResponse
     {
-        $service->update($request->validated());
+        $data = $request->validated();
+
+        if ($request->hasFile('image')) {
+            if ($this->shouldDeleteStoredFile($service->image)) {
+                Storage::disk('public')->delete($service->image);
+            }
+
+            $data['image'] = $request->file('image')->store('services', 'public');
+        }
+
+        $service->update($data);
 
         return $this->successResponse(new ServiceResource($service->fresh()), 'Service updated successfully.');
     }
 
     public function destroy(Service $service): JsonResponse
     {
+        if ($this->shouldDeleteStoredFile($service->image)) {
+            Storage::disk('public')->delete($service->image);
+        }
+
         $service->delete();
 
         return $this->successResponse(null, 'Service deleted successfully.');
+    }
+
+    private function shouldDeleteStoredFile(?string $path): bool
+    {
+        if (! $path || str_starts_with($path, '/') || filter_var($path, FILTER_VALIDATE_URL)) {
+            return false;
+        }
+
+        return Storage::disk('public')->exists($path);
     }
 }

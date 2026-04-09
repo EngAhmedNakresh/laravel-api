@@ -13,12 +13,16 @@ class StoreServiceRequest extends FormRequest
 
     public function rules(): array
     {
+        $imageRules = $this->hasFile('image')
+            ? ['nullable', 'file', 'image', 'max:2048']
+            : ['nullable', 'string', 'max:255'];
+
         return [
             'name_en' => ['required', 'string', 'max:255'],
             'name_ar' => ['required', 'string', 'max:255'],
             'description_en' => ['nullable', 'string'],
             'description_ar' => ['nullable', 'string'],
-            'image' => ['nullable', 'string', 'max:255'],
+            'image' => $imageRules,
             'icon' => ['nullable', 'string', 'max:255'],
             'feature_one_en' => ['nullable', 'string', 'max:255'],
             'feature_one_ar' => ['nullable', 'string', 'max:255'],
