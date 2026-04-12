@@ -10,6 +10,8 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends ApiController
 {
@@ -53,6 +55,23 @@ class AuthController extends ApiController
         ], 'Logged in successfully.');
     }
 
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        $status = Password::sendResetLink([
+            'email' => $validated['email'],
+        ]);
+
+        if ($status !== Password::RESET_LINK_SENT) {
+            return $this->errorResponse(__($status), 422);
+        }
+
+        return $this->successResponse(null, __($status));
+    }
+
     public function logout(): JsonResponse
     {
         request()->user()?->currentAccessToken()?->delete();
@@ -73,10 +92,22 @@ class AuthController extends ApiController
             'name' => ['sometimes', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:30'],
             'address' => ['nullable', 'string', 'max:500'],
+            'image' => ['nullable', 'file', 'image', 'max:2048'],
         ]);
 
         if (array_key_exists('name', $data)) {
             $user->name = $data['name'];
+        }
+
+        if ($request->hasFile('image')) {
+            if ($this->shouldDeleteStoredFile($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+
+            $user->avatar = $request->file('image')->store('avatars', 'public');
+        }
+
+        if ($user->isDirty()) {
             $user->save();
         }
 
@@ -97,5 +128,14 @@ class AuthController extends ApiController
         }
 
         return $this->successResponse(new UserResource($user->fresh()->load('patient')), 'Profile updated successfully.');
+    }
+
+    private function shouldDeleteStoredFile(?string $path): bool
+    {
+        if (! $path || str_starts_with($path, '/') || filter_var($path, FILTER_VALIDATE_URL)) {
+            return false;
+        }
+
+        return Storage::disk('public')->exists($path);
     }
 }

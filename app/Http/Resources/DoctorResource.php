@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\PublicAssetUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -22,7 +23,8 @@ class DoctorResource extends JsonResource
             'bio' => $this->getLocalized('bio', $lang),
             'bio_en' => $this->bio_en,
             'bio_ar' => $this->bio_ar,
-            'image_url' => $this->image_url,
+            'image' => PublicAssetUrl::from($this->image, 'doctor'),
+            'image_url' => PublicAssetUrl::from($this->image, 'doctor'),
             'created_at' => $this->created_at,
         ];
     }

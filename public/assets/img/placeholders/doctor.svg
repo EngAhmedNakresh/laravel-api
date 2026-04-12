@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-labelledby="title desc">
+  <title id="title">Doctor placeholder</title>
+  <desc id="desc">Fallback illustration for doctor profile images.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e0f2fe" />
+      <stop offset="100%" stop-color="#cffafe" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" rx="36" fill="url(#bg)" />
+  <circle cx="400" cy="225" r="110" fill="#0f766e" opacity="0.16" />
+  <path d="M400 158c-42 0-76 34-76 76s34 76 76 76 76-34 76-76-34-76-76-76Zm0 190c-90 0-164 59-164 132v16h328v-16c0-73-74-132-164-132Z" fill="#0f766e" />
+  <path d="M587 118h-74V44h-42v74h-74v42h74v74h42v-74h74z" fill="#ffffff" />
+  <text x="400" y="552" font-family="Arial, sans-serif" font-size="34" text-anchor="middle" fill="#155e75">Doctor image unavailable</text>
+</svg>

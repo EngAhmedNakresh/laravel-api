@@ -2,9 +2,9 @@
 
 namespace App\Http\Resources;
 
+use App\Support\PublicAssetUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
 
 class ServiceResource extends JsonResource
 {
@@ -37,15 +37,6 @@ class ServiceResource extends JsonResource
 
     private function publicImageUrl(?string $path): ?string
     {
-        if (! $path) {
-            return null;
-        }
-
-        if (filter_var($path, FILTER_VALIDATE_URL) || str_starts_with($path, '/')) {
-            return $path;
-        }
-
-        return Storage::disk('public')->url($path);
+        return PublicAssetUrl::from($path);
     }
 }
-

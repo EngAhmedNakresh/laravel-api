@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\PublicAssetUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -19,7 +20,7 @@ class HomeContentResource extends JsonResource
                 'subtitle' => $this->translate($this->hero['subtitle'] ?? [], $lang),
                 'primary_cta' => $this->translate($this->hero['primary_cta'] ?? [], $lang),
                 'secondary_cta' => $this->translate($this->hero['secondary_cta'] ?? [], $lang),
-                'image' => data_get($this->hero, 'image'),
+                'image' => $this->publicImageUrl(data_get($this->hero, 'image')),
                 'feature' => [
                     'title' => $this->translate(data_get($this->hero, 'feature.title', []), $lang),
                     'value' => $this->translate(data_get($this->hero, 'feature.value', []), $lang),
@@ -37,7 +38,7 @@ class HomeContentResource extends JsonResource
                 'lead' => $this->translate($this->about['lead'] ?? [], $lang),
                 'body' => $this->translate($this->about['body'] ?? [], $lang),
                 'primary_cta' => $this->translate($this->about['primary_cta'] ?? [], $lang),
-                'image' => data_get($this->about, 'image'),
+                'image' => $this->publicImageUrl(data_get($this->about, 'image')),
                 'card_title' => $this->translate(data_get($this->about, 'card_title', []), $lang),
                 'card_text' => $this->translate(data_get($this->about, 'card_text', []), $lang),
                 'badge_value' => data_get($this->about, 'badge_value'),
@@ -71,7 +72,7 @@ class HomeContentResource extends JsonResource
                         'feature_1' => $this->translate($item['feature_1'] ?? [], $lang),
                         'feature_2' => $this->translate($item['feature_2'] ?? [], $lang),
                         'cta' => $this->translate($item['cta'] ?? [], $lang),
-                        'image' => $item['image'] ?? null,
+                        'image' => $this->publicImageUrl($item['image'] ?? null),
                         'icon' => $item['icon'] ?? 'bi bi-heart-pulse',
                     ])->values(),
                     'highlights' => collect(data_get($this->sections, 'departments.highlights', []))->map(fn ($item) => [
@@ -86,12 +87,12 @@ class HomeContentResource extends JsonResource
                     'title' => $this->translate(data_get($this->sections, 'services_spotlight.title', []), $lang),
                     'subtitle' => $this->translate(data_get($this->sections, 'services_spotlight.subtitle', []), $lang),
                     'badge' => $this->translate(data_get($this->sections, 'services_spotlight.badge', []), $lang),
-                    'image' => data_get($this->sections, 'services_spotlight.image'),
+                    'image' => $this->publicImageUrl(data_get($this->sections, 'services_spotlight.image')),
                     'cta' => $this->translate(data_get($this->sections, 'services_spotlight.cta', []), $lang),
                     'circles' => collect(data_get($this->sections, 'services_spotlight.circles', []))->map(fn ($item) => [
                         'title' => $this->translate($item['title'] ?? [], $lang),
                         'subtitle' => $this->translate($item['subtitle'] ?? [], $lang),
-                        'image' => $item['image'] ?? null,
+                        'image' => $this->publicImageUrl($item['image'] ?? null),
                     ])->values(),
                 ],
                 'emergency_banner' => [
@@ -104,7 +105,7 @@ class HomeContentResource extends JsonResource
                     'subtitle' => $this->translate(data_get($this->sections, 'call_to_action.subtitle', []), $lang),
                     'primary_cta' => $this->translate(data_get($this->sections, 'call_to_action.primary_cta', []), $lang),
                     'secondary_cta' => $this->translate(data_get($this->sections, 'call_to_action.secondary_cta', []), $lang),
-                    'image' => data_get($this->sections, 'call_to_action.image'),
+                    'image' => $this->publicImageUrl(data_get($this->sections, 'call_to_action.image')),
                     'features' => collect(data_get($this->sections, 'call_to_action.features', []))->map(fn ($item) => [
                         'title' => $this->translate($item['title'] ?? [], $lang),
                         'text' => $this->translate($item['text'] ?? [], $lang),
@@ -154,5 +155,10 @@ class HomeContentResource extends JsonResource
         }
 
         return $value[$lang] ?? $value['en'] ?? null;
+    }
+
+    private function publicImageUrl(?string $path): string
+    {
+        return PublicAssetUrl::from($path);
     }
 }

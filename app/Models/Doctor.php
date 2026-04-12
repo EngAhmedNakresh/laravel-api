@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use App\Support\PublicAssetUrl;
 use App\Traits\HasLocalizedAttributes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage;
 
 class Doctor extends Model
 {
@@ -32,14 +32,6 @@ class Doctor extends Model
 
     public function getImageUrlAttribute(): ?string
     {
-        if (! $this->image) {
-            return null;
-        }
-
-        if (str_starts_with($this->image, '/')) {
-            return $this->image;
-        }
-
-        return Storage::disk('public')->url($this->image);
+        return PublicAssetUrl::from($this->image);
     }
 }

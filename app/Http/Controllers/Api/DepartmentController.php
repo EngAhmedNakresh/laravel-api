@@ -45,9 +45,7 @@ class DepartmentController extends ApiController
     {
         $data = $this->validated($request, true);
 
-        if ($request->hasFile('card_image')) {
-            $data['card_image'] = $request->file('card_image')->store('departments', 'public');
-        }
+        $data = $this->storeDepartmentImages($request, $data);
 
         $department = Department::create($data);
 
@@ -58,13 +56,7 @@ class DepartmentController extends ApiController
     {
         $data = $this->validated($request, false, $department->id);
 
-        if ($request->hasFile('card_image')) {
-            if ($this->shouldDeleteStoredFile($department->card_image)) {
-                Storage::disk('public')->delete($department->card_image);
-            }
-
-            $data['card_image'] = $request->file('card_image')->store('departments', 'public');
-        }
+        $data = $this->storeDepartmentImages($request, $data, $department);
 
         $department->update($data);
 
@@ -73,8 +65,10 @@ class DepartmentController extends ApiController
 
     public function destroy(Department $department): JsonResponse
     {
-        if ($this->shouldDeleteStoredFile($department->card_image)) {
-            Storage::disk('public')->delete($department->card_image);
+        foreach (['card_image', 'detail_image', 'detail_image_secondary'] as $field) {
+            if ($this->shouldDeleteStoredFile($department->{$field})) {
+                Storage::disk('public')->delete($department->{$field});
+            }
         }
 
         $department->delete();
@@ -95,6 +89,12 @@ class DepartmentController extends ApiController
         $cardImageRules = $request->hasFile('card_image')
             ? ['nullable', 'file', 'image', 'max:2048']
             : ['nullable', 'string', 'max:255'];
+        $detailImageRules = $request->hasFile('detail_image')
+            ? ['nullable', 'file', 'image', 'max:2048']
+            : ['nullable', 'string', 'max:255'];
+        $secondaryDetailImageRules = $request->hasFile('detail_image_secondary')
+            ? ['nullable', 'file', 'image', 'max:2048']
+            : ['nullable', 'string', 'max:255'];
 
         return $request->validate([
             'slug' => $creating ? $slugRule : ['sometimes', ...$slugRule],
@@ -105,8 +105,8 @@ class DepartmentController extends ApiController
             'description_en' => ['nullable', 'string'],
             'description_ar' => ['nullable', 'string'],
             'card_image' => $cardImageRules,
-            'detail_image' => ['nullable', 'string', 'max:255'],
-            'detail_image_secondary' => ['nullable', 'string', 'max:255'],
+            'detail_image' => $detailImageRules,
+            'detail_image_secondary' => $secondaryDetailImageRules,
             'icon' => ['nullable', 'string', 'max:255'],
             'feature_one_en' => ['nullable', 'string', 'max:255'],
             'feature_one_ar' => ['nullable', 'string', 'max:255'],
@@ -177,5 +177,22 @@ class DepartmentController extends ApiController
         if ($normalized !== []) {
             $request->merge($normalized);
         }
+    }
+
+    private function storeDepartmentImages(Request $request, array $data, ?Department $department = null): array
+    {
+        foreach (['card_image', 'detail_image', 'detail_image_secondary'] as $field) {
+            if (! $request->hasFile($field)) {
+                continue;
+            }
+
+            if ($department && $this->shouldDeleteStoredFile($department->{$field})) {
+                Storage::disk('public')->delete($department->{$field});
+            }
+
+            $data[$field] = $request->file($field)->store('departments', 'public');
+        }
+
+        return $data;
     }
 }

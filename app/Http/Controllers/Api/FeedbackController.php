@@ -13,7 +13,7 @@ class FeedbackController extends ApiController
     public function index(Request $request): JsonResponse
     {
         $feedback = Feedback::query()
-            ->with('user.patient')
+            ->with('user')
             ->latest()
             ->paginate((int) $request->input('per_page', 10));
 

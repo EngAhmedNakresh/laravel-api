@@ -135,9 +135,22 @@ class SiteOverride extends Model
         ]);
 
         $record->updateQuietly([
-            'overrides' => array_replace(static::defaults(), $record->overrides ?? []),
+            'overrides' => static::sanitizeOverrides($record->overrides ?? []),
         ]);
 
         return $record->fresh();
+    }
+
+    public static function sanitizeOverrides(array $overrides): array
+    {
+        $defaults = static::defaults();
+
+        foreach ($defaults as $key => $default) {
+            if (! array_key_exists($key, $overrides) || $overrides[$key] === null) {
+                $overrides[$key] = $default;
+            }
+        }
+
+        return array_replace($defaults, $overrides);
     }
 }

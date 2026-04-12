@@ -24,37 +24,9 @@ Route::get('ping', fn () => response()->json([
     'message' => 'Laravel API works',
 ]));
 
-Route::get('make-me-admin', function (Request $request) {
-    $secret = (string) $request->query('secret');
-    $email = mb_strtolower(trim((string) $request->query('email')));
-    $expectedSecret = env('MY_TEMP_ADMIN_SECRET');
-
-    if (! $expectedSecret || ! hash_equals($expectedSecret, $secret)) {
-        return response()->json([
-            'message' => 'Forbidden',
-        ], 403);
-    }
-
-    $user = User::query()->where('email', $email)->first();
-
-    if (! $user) {
-        return response()->json([
-            'message' => 'User not found',
-        ], 404);
-    }
-
-    $user->role = UserRole::Admin;
-    $user->save();
-
-    return response()->json([
-        'message' => 'User promoted to admin successfully',
-        'email' => $user->email,
-        'role' => $user->role->value,
-    ]);
-});
-
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
+Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
 
 Route::get('home-content', [HomeContentController::class, 'show']);
 Route::get('departments', [DepartmentController::class, 'index']);

@@ -13,7 +13,7 @@ class FeedbackResource extends JsonResource
             'id' => $this->id,
             'message' => $this->message,
             'rating' => $this->rating,
-            'user' => new UserResource($this->whenLoaded('user')),
+            'user' => UserResource::publicSummary($this->whenLoaded('user')),
             'created_at' => $this->created_at,
         ];
     }

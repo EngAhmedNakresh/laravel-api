@@ -6,7 +6,8 @@ RUN apt-get update && apt-get install -y \
     git \
     unzip \
     libzip-dev \
-    && docker-php-ext-install pdo_mysql zip \
+    libpq-dev \
+    && docker-php-ext-install pdo_mysql pdo_pgsql zip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -22,4 +23,4 @@ RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framewor
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "php artisan migrate --force && php artisan db:seed --class=AdminUserSeeder --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
+CMD ["sh", "-c", "php artisan storage:link || true && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]

@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\SiteOverride;
+use App\Support\PublicAssetUrl;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class SiteOverrideController extends ApiController
 {
@@ -23,14 +26,14 @@ class SiteOverrideController extends ApiController
     {
         $data = $request->validate([
             'overrides' => ['nullable', 'array'],
-            'overrides.heroImageUrl' => ['nullable', 'file', 'image', 'max:2048'],
-            'overrides.aboutImageUrl' => ['nullable', 'file', 'image', 'max:2048'],
-            'overrides.servicesSpotlightImageUrl' => ['nullable', 'file', 'image', 'max:2048'],
-            'overrides.callToActionImageUrl' => ['nullable', 'file', 'image', 'max:2048'],
-            'heroImageUrl' => ['nullable', 'file', 'image', 'max:2048'],
-            'aboutImageUrl' => ['nullable', 'file', 'image', 'max:2048'],
-            'servicesSpotlightImageUrl' => ['nullable', 'file', 'image', 'max:2048'],
-            'callToActionImageUrl' => ['nullable', 'file', 'image', 'max:2048'],
+            'overrides.heroImageUrl' => $this->imageOverrideRules(),
+            'overrides.aboutImageUrl' => $this->imageOverrideRules(),
+            'overrides.servicesSpotlightImageUrl' => $this->imageOverrideRules(),
+            'overrides.callToActionImageUrl' => $this->imageOverrideRules(),
+            'heroImageUrl' => $this->imageOverrideRules(),
+            'aboutImageUrl' => $this->imageOverrideRules(),
+            'servicesSpotlightImageUrl' => $this->imageOverrideRules(),
+            'callToActionImageUrl' => $this->imageOverrideRules(),
         ]);
 
         $record = SiteOverride::ensureSeeded();
@@ -54,7 +57,11 @@ class SiteOverrideController extends ApiController
         }
 
         $record->update([
-            'overrides' => array_replace(SiteOverride::defaults(), $record->overrides ?? [], $overrides),
+            'overrides' => SiteOverride::sanitizeOverrides(array_replace(
+                SiteOverride::defaults(),
+                $record->overrides ?? [],
+                $overrides,
+            )),
         ]);
 
         return $this->successResponse([
@@ -97,17 +104,43 @@ class SiteOverrideController extends ApiController
 
     private function publicImageUrl(mixed $path): mixed
     {
-        if (! is_string($path) || $path === '') {
+        if (! is_string($path)) {
             return $path;
         }
 
-        if (filter_var($path, FILTER_VALIDATE_URL) || str_starts_with($path, '/')) {
-            return $path;
-        }
+        return PublicAssetUrl::from($path);
+    }
 
-        return Storage::disk('public')->url($path);
+    private function imageOverrideRules(): array
+    {
+        return [
+            'nullable',
+            function (string $attribute, mixed $value, \Closure $fail): void {
+                if ($value === null || $value === '') {
+                    return;
+                }
+
+                if (is_string($value)) {
+                    return;
+                }
+
+                if (! $value instanceof UploadedFile) {
+                    $fail("The {$attribute} field must be a file or string.");
+
+                    return;
+                }
+
+                $validator = Validator::make(
+                    [$attribute => $value],
+                    [$attribute => ['file', 'image', 'max:2048']]
+                );
+
+                if ($validator->fails()) {
+                    foreach ($validator->errors()->get($attribute) as $message) {
+                        $fail($message);
+                    }
+                }
+            },
+        ];
     }
 }
-
-
-
